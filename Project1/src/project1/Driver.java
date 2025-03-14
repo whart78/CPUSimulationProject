@@ -3,6 +3,10 @@ package project1;
 import java.util.*;
 import java.io.*;
 
+import java.util.*;
+import java.io.*;
+import java.util.Scanner;
+
 public class Driver {
 
 	public static void main(String[] args) throws FileNotFoundException {
@@ -10,30 +14,33 @@ public class Driver {
 		Scanner sc = new Scanner(new File("src/proc.txt"));
 		String alg = sc.nextLine(); //read the selected algorithm
 		String line;
-		int id = 0;
+		int id = 1;
 		ArrayList<PCB> allProcs = new ArrayList<>(); //list of processes
 		while(sc.hasNextLine()) {
 			line = sc.nextLine(); //read a line from the file
 			String[] arr = line.split(", ");
 			String name = arr[0];
 			int arrivalTime = Integer.parseInt(arr[1].trim());
-			List<Integer> cpuBurstTimes = new ArrayList<>(); //= Integer.parseInt(arr[2].trim());
-			List<Integer> ioBurstTimes = new ArrayList<>();
+			//int cpuBurstTime = Integer.parseInt(arr[2].trim());
+			
+			//add cpu bursts into a list
+			List<Integer> cpuBursts = new ArrayList<>();
 			for(int i = 3; i < arr.length; i++) {
 				if(i % 2 != 0) {
-					cpuBurstTimes.add(Integer.parseInt(arr[i]));
-				}
-				else {
-					ioBurstTimes.add(Integer.parseInt(arr[i]));
+					cpuBursts.add(Integer.parseInt(arr[i]));
 				}
 			}
 			
-			//!!!!!!! Test Statements for burst lists
-			System.out.println("CPU Bursts: " + cpuBurstTimes);
-			System.out.println("IO Bursts: " + ioBurstTimes);
+			//add io bursts into a list
+			List<Integer> ioBursts = new ArrayList<>();
+			for(int i = 4; i < arr.length; i++) {
+				if(i % 2 == 0) {
+					ioBursts.add(Integer.parseInt(arr[i]));
+				}
+			}
 			
 			int priority = Integer.parseInt(arr[3].trim());
-			PCB proc = new PCB(name, id++, arrivalTime, cpuBurstTimes, ioBurstTimes, priority);
+			PCB proc = new PCB(name, id++, arrivalTime, cpuBursts, ioBursts, priority);
 			allProcs.add(proc);
 		}
 		
@@ -48,3 +55,4 @@ public class Driver {
 	}
 
 }
+
