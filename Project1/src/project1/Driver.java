@@ -19,29 +19,31 @@ public class Driver {
 		while(sc.hasNextLine()) {
 			line = sc.nextLine(); //read a line from the file
 			String[] arr = line.split(", ");
-			String name = arr[0];
-			int arrivalTime = Integer.parseInt(arr[1].trim());
-			//int cpuBurstTime = Integer.parseInt(arr[2].trim());
-			
-			//add cpu bursts into a list
-			List<Integer> cpuBursts = new ArrayList<>();
-			for(int i = 3; i < arr.length; i++) {
-				if(i % 2 != 0) {
-					cpuBursts.add(Integer.parseInt(arr[i]));
+			if(arr.length % 2 == 0 && arr.length >= 4) {
+				String name = arr[0];
+				int arrivalTime = Integer.parseInt(arr[1].trim());
+				//int cpuBurstTime = Integer.parseInt(arr[2].trim());
+				
+				//add cpu bursts into a list
+				List<Integer> cpuBursts = new ArrayList<>();
+				for(int i = 3; i < arr.length; i++) {
+					if(i % 2 != 0) {
+						cpuBursts.add(Integer.parseInt(arr[i]));
+					}
 				}
-			}
-			
-			//add io bursts into a list
-			List<Integer> ioBursts = new ArrayList<>();
-			for(int i = 4; i < arr.length; i++) {
-				if(i % 2 == 0) {
-					ioBursts.add(Integer.parseInt(arr[i]));
+				
+				//add io bursts into a list
+				List<Integer> ioBursts = new ArrayList<>();
+				for(int i = 4; i < arr.length; i++) {
+					if(i % 2 == 0) {
+						ioBursts.add(Integer.parseInt(arr[i]));
+					}
 				}
+				
+				int priority = Integer.parseInt(arr[3].trim());
+				PCB proc = new PCB(name, id++, arrivalTime, cpuBursts, ioBursts, priority);
+				allProcs.add(proc);
 			}
-			
-			int priority = Integer.parseInt(arr[3].trim());
-			PCB proc = new PCB(name, id++, arrivalTime, cpuBursts, ioBursts, priority);
-			allProcs.add(proc);
 		}
 		
 		//ready to simulate the scheduling of those processes

@@ -10,6 +10,7 @@ public class PCB {
 	private int arrivalTime; // arrival time of the process
 	//private int cpuBurst;    // CPU burst length in unit time
 	private int priority;    // priority level of the process
+	private String status;
 	private int numOfCpuBursts;
 	private int numOfIOBursts;
 	private List<Integer> cpuBursts;
@@ -106,6 +107,14 @@ public class PCB {
 		this.priority = priority;
 	}
 
+	public String getStatus() {
+		return status;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
+	}
+
 	public int getStartTime() {
 		return startTime;
 	}
@@ -121,6 +130,7 @@ public class PCB {
 	public void setFinishTime(int finishTime) {
 		this.finishTime = finishTime;
 		this.turnaroundTime = finishTime - arrivalTime;
+		status = "Completed";
 	}
 
 	public int getTurnaroundTime() {
@@ -145,10 +155,10 @@ public class PCB {
 	}
 	
 	public String toString() {
-		return "Process [ID: " + id 
-			    + " | Arrival Time: " + arrivalTime + " | Priority: " + priority + " | CPU Bursts: " + cpuBursts +
+		return "[ID: " + id 
+			    + " | Arrival Time: " + arrivalTime + " | Priority: " + priority + " | CPU Bursts: " + ((cpuBursts.isEmpty()) ? "none" : cpuBursts) +
 			      " | IO Bursts: " + ((ioBursts.isEmpty()) ? "none" : ioBursts) + " | Finish Time: " + finishTime + 
-			      " | Wait Time: " + waitingTime + "]";
+			      " | Wait Time: " + waitingTime + " | Wait IO Time: Not Implemented Yet. " + " | Status: " + status +  "]";
 	}
 
 } 
