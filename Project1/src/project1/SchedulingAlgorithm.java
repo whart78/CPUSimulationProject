@@ -26,7 +26,7 @@ public abstract class SchedulingAlgorithm {
 		//- while (allProcs is not empty or readyQueue is not empty) {
 		while(!allProcs.isEmpty() || !readyQueue.isEmpty() || curIO != null) {
 			//Print the current system time
-			System.out.println("\nSystem time: " + systemTime);
+			System.out.println("\n\nSystem time: " + systemTime);
 			
 			//Move arrived processes from allProcs to readyQueue (arrivalTime = systemTime)
 			for(PCB proc : allProcs) {
@@ -39,37 +39,21 @@ public abstract class SchedulingAlgorithm {
 			allProcs.removeAll(readyQueue);
 			//curProcess = pickNextProcess() //call pickNextProcess() to choose next process
 			
-			if(curIO != null && curIO.getIOBursts().get(0) == 0) {
-				curIO.getIOBursts().removeFirst();
-				readyQueue.add(curIO);
-				if(!ioWaitingQueue.isEmpty()) {
-					curIO = ioWaitingQueue.get(0);
-				}
-				else {
-					curIO = null;
-				}
-			}
-			else if (curIO != null) {
-				IO.execute(curIO, 1);
-			}
 			
 			//if there are processes in the ready queue, continue to processing
 			if(!readyQueue.isEmpty()) {
+				
+				//select a process
 				curProcess = pickNextProcess();
 				curProcess.setStatus("Started");
+				
 				//remove the selected process from the ready queue.
 				readyQueue.remove(curProcess);
 				
-				//if the arrival time of the picked process is in the future, change the current process to null and increase CPU idle time by 1
-				//if(curProcess.getArrivalTime() > systemTime) {
-				//	curProcess = null;
-				//	cpuIdleTimer += 1;
-				//}
-				
-				//call print() to print simulation events: CPU, ready queue, ..
+				//call print() to print simulation state at the beginning of this simulation step.
 				print();
 				
-				//if the current process is not null (the system is not idle), process
+				//if the current process is not null (the system is not idle), continue to process.
 				if(curProcess != null) {
 					//update the start time of the selected process (curProcess)
 					if(curProcess.getStartTime() < 0) 
@@ -92,16 +76,7 @@ public abstract class SchedulingAlgorithm {
 						if(curProcess.getCpuBursts().get(0) == 0) {
 							curProcess.getCpuBursts().removeFirst();
 							
-							if(!curProcess.getIOBursts().isEmpty()) {
-								if(curIO == null) { 
-									curIO = curProcess;
-								}
-								else {
-									ioWaitingQueue.add(curProcess);
-								}
-								readyQueue.remove(curProcess);
-							}
-							else if(curProcess.getCpuBursts().isEmpty()) {
+							if(curProcess.getCpuBursts().isEmpty()) {
 								//remove curProcess from readyQueue
 								readyQueue.remove(curProcess);
 								//add curProcess to the finished queue (finishedProcs)
@@ -113,14 +88,26 @@ public abstract class SchedulingAlgorithm {
 										+ ". Turnaround time: " +curProcess.getTurnaroundTime()
 										+ ". Waiting time: " + curProcess.getWaitingTime());
 							}
+							//if process has ioBurst, add to io waiting queue.
+							else if(!curProcess.getIOBursts().isEmpty()) {
+								ioWaitingQueue.add(curProcess);
+								readyQueue.remove(curProcess);
+							}
 					
 						}
+						//handle IO 
+						//IOHandler();
 				}
+				//else no current process, iterate system time.
 				else {
 					systemTime +=1;
 				}
+				//handle IO 
+				IOHandler();
 			}
+			//else there are no processes in the ready queue. Handle IO, thus a process cannot be selected for CPU execution. Print system state and iterate system time.
 			else {
+				IOHandler();
 				curProcess = null;
 				print();
 				systemTime += 1;
@@ -128,8 +115,27 @@ public abstract class SchedulingAlgorithm {
 		}
 	}
 	
-	//Selects the next task using the appropriate scheduling algorithm
+	  //Selects the next task using the appropriate scheduling algorithm
       public abstract PCB pickNextProcess();
+      
+      //IO handler selects next IO burst if none from waiting queue. If one is already selected, execute.
+      //If the burst is completed, remove the burst, send it back the ready queue and set the current IO to null.
+      private void IOHandler() {
+    	  
+    	  	if(!ioWaitingQueue.isEmpty() && curIO == null) {
+    	  		curIO = ioWaitingQueue.get(0);
+    	  	}
+    	  	else if (curIO != null){
+    	  		IO.execute(curIO, 1);
+    	  	}
+			
+			if(curIO != null && curIO.getIOBursts().get(0) == 0) {
+				curIO.getIOBursts().removeFirst();
+				ioWaitingQueue.removeFirst();
+				readyQueue.add(curIO);
+				curIO = null;
+			}
+      }
 
       //print simulation step
       public void print() {
@@ -157,7 +163,7 @@ public abstract class SchedulingAlgorithm {
 				System.out.println("  " + proc);
 			}
 		}
-      }
+    }
 }
 
 
