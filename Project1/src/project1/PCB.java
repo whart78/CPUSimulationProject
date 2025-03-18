@@ -17,7 +17,7 @@ public class PCB {
 	private List<Integer> ioBursts;
 	
 	// the statistics of process execution
-	private int startTime, finishTime, turnaroundTime, waitingTime;
+	private int startTime, finishTime, turnaroundTime, waitingTime, ioWaitingTime;
 
 	// constructor
 	public PCB(String name, int id, int arrivalTime, List<Integer> cpuBursts, List<Integer> ioBursts,
@@ -149,16 +149,29 @@ public class PCB {
 		this.waitingTime = waitingTime;
 	}
 	
+	public int getIoWaitingTime() {
+		return ioWaitingTime;
+	}
+
+	public void setIoWaitingTime(int ioWaitingTime) {
+		this.ioWaitingTime = ioWaitingTime;
+	}
+
 	public void increaseWaitingTime(int burst) {
 		//Increase the waitingTime variable with burst.
 		this.waitingTime += burst;
+	}
+	
+	public void increaseIOWaitingTime(int burst) {
+		//Increase the waitingTime variable with burst.
+		this.ioWaitingTime += burst;
 	}
 	
 	public String toString() {
 		return "[ID: " + id 
 			    + " | Arrival Time: " + arrivalTime + " | Priority: " + priority + " | CPU Bursts: " + ((cpuBursts.isEmpty()) ? "none" : cpuBursts) +
 			      " | IO Bursts: " + ((ioBursts.isEmpty()) ? "none" : ioBursts) + " | Finish Time: " + finishTime + 
-			      " | Wait Time: " + waitingTime + " | Wait IO Time: Not Implemented Yet. " + " | Status: " + status +  "]";
+			      " | Wait Time: " + waitingTime + " | Wait IO Time: " + ioWaitingTime + " | Status: " + status +  "]";
 	}
 
 } 

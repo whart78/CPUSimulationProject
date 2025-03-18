@@ -10,6 +10,7 @@ public abstract class SchedulingAlgorithm {
 	protected PCB curProcess; //current selected process by the scheduler
 	protected PCB curIO;
 	protected int systemTime; //system time or simulation time steps
+	protected int cpuIdleTime;
  
       public SchedulingAlgorithm(String name, List<PCB> queue) {
     	      this.name = name;
@@ -17,6 +18,7 @@ public abstract class SchedulingAlgorithm {
     	      this.readyQueue = new ArrayList<>();
     	      this.finishedProcs = new ArrayList<>();
     	      this.ioWaitingQueue = new ArrayList<>();
+    	      cpuIdleTime = 0;
       }
 	
 	public void schedule() {
@@ -66,53 +68,51 @@ public abstract class SchedulingAlgorithm {
 						for(PCB proc: readyQueue) 
 							if(proc != curProcess) proc.increaseWaitingTime(1);
 						
-						//Increase systemTime by 1
-						systemTime += 1;
-						
 						//add the current process back to ready queue to be assessed.
 						readyQueue.add(curProcess);
 						
 						//Check if the remaining CPU burst of curProcess = 0
 						if(curProcess.getCpuBursts().get(0) == 0) {
 							curProcess.getCpuBursts().removeFirst();
-							
 							if(curProcess.getCpuBursts().isEmpty()) {
 								//remove curProcess from readyQueue
 								readyQueue.remove(curProcess);
 								//add curProcess to the finished queue (finishedProcs)
 								finishedProcs.add(curProcess);
-								//Update finishTime of curProcess
-								curProcess.setFinishTime(systemTime);
+								//Update finishTime of curProcess 
+								curProcess.setFinishTime(systemTime + 1);
 								//Print to the console a message displaying the process name, terminated time, startTime, turnaroundTime, waitingTime
-								System.out.println("Process " + curProcess.getId() + " terminated at " + systemTime
-										+ ". Turnaround time: " +curProcess.getTurnaroundTime()
-										+ ". Waiting time: " + curProcess.getWaitingTime());
+								//System.out.println("Process " + curProcess.getId() + " terminated at " + systemTime
+								//		+ ". Turnaround time: " +curProcess.getTurnaroundTime()
+								//		+ ". Waiting time: " + curProcess.getWaitingTime());
 							}
 							//if process has ioBurst, add to io waiting queue.
 							else if(!curProcess.getIOBursts().isEmpty()) {
 								ioWaitingQueue.add(curProcess);
 								readyQueue.remove(curProcess);
 							}
-					
 						}
 						//handle IO 
 						//IOHandler();
 				}
-				//else no current process, iterate system time.
-				else {
-					systemTime +=1;
-				}
-				//handle IO 
-				IOHandler();
-			}
-			//else there are no processes in the ready queue. Handle IO, thus a process cannot be selected for CPU execution. Print system state and iterate system time.
-			else {
+		
 				IOHandler();
 				curProcess = null;
-				print();
 				systemTime += 1;
 			}
+			//else there are no processes in the ready queue, thus a process cannot be selected for CPU execution. Handle IO. Print system state and iterate system time.
+			else {
+				print();
+				IOHandler();
+				curProcess = null;
+				systemTime += 1;
+				cpuIdleTime +=1;
+			}
 		}
+		//Last print for program
+		System.out.println("\nFinal State");
+		System.out.printf("CPU Utilization: %.2f %%\n", ((double) (systemTime - cpuIdleTime) / systemTime) * 100);
+		print();
 	}
 	
 	  //Selects the next task using the appropriate scheduling algorithm
@@ -122,18 +122,29 @@ public abstract class SchedulingAlgorithm {
       //If the burst is completed, remove the burst, send it back the ready queue and set the current IO to null.
       private void IOHandler() {
     	  
+    	  	//Is there are processes waiting for IO and there is no current IO, pick the first.
     	  	if(!ioWaitingQueue.isEmpty() && curIO == null) {
-    	  		curIO = ioWaitingQueue.get(0);
+    	  		curIO = ioWaitingQueue.getFirst();
     	  	}
+    	  	//Else if there a process already selected for IO, execute.
     	  	else if (curIO != null){
     	  		IO.execute(curIO, 1);
+    	  		//Increase 1 to the waiting time of other processes in the waiting queue
+				for(PCB proc: ioWaitingQueue) 
+					if(proc != curIO) proc.increaseIOWaitingTime(1);
     	  	}
-			
-			if(curIO != null && curIO.getIOBursts().get(0) == 0) {
+    	  	
+    	  	//A check to see if the process is done with IO. If done, move it to readyQueue.
+    	  	if(curIO != null && curIO.getIOBursts().get(0) == 0) {
 				curIO.getIOBursts().removeFirst();
 				ioWaitingQueue.removeFirst();
 				readyQueue.add(curIO);
-				curIO = null;
+				if(!ioWaitingQueue.isEmpty()) {
+					curIO = ioWaitingQueue.getFirst();
+				}
+				else {
+					curIO = null;
+				}
 			}
       }
 
@@ -142,11 +153,11 @@ public abstract class SchedulingAlgorithm {
 		System.out.println("CPU: " + ((curProcess == null) ? "idle" : curProcess.getName()));
 		System.out.println("IO: " + ((curIO == null) ? "idle" : curIO.getName()));
 		
-		if (curProcess != null) {
+		if(curProcess != null) {
 			System.out.println("Current Process: \n  CPU " + curProcess);
-			if(curIO != null) {
-				System.out.println("  IO " + curIO);
-			}
+		}
+		if(curIO != null) {
+			System.out.println("  IO " + curIO);
 		}
 		
 		if (!readyQueue.isEmpty()) {
@@ -154,6 +165,14 @@ public abstract class SchedulingAlgorithm {
 			for(PCB proc : readyQueue) {
 				
 				System.out.println("  " + proc);
+			}
+		}
+		
+		if(ioWaitingQueue.size() > 1) {
+			System.out.println("Processes Waiting for IO: ");
+			for(PCB proc : ioWaitingQueue) {
+				if(proc != curIO )
+					System.out.println("  " + proc);
 			}
 		}
 		//print finished processes
