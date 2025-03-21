@@ -13,8 +13,8 @@ public abstract class SchedulingAlgorithm {
 	protected PCB curIO;
 	protected int systemTime; //system time or simulation time steps
 	protected int cpuIdleTime;
-	protected String schedulingMode = "Manual"; //system time or simulation time steps
-	protected int stepsPerSecond = 2;
+	protected String schedulingMode; //system time or simulation time steps
+	protected int stepsPerSecond;
  
 	  public SchedulingAlgorithm(String name, List<PCB> queue) {
 		      this.name = name;
@@ -23,14 +23,7 @@ public abstract class SchedulingAlgorithm {
 		      this.finishedProcs = new ArrayList<>();
 		      this.ioWaitingQueue = new ArrayList<>();
 		      cpuIdleTime = 0;
-	  }
-      
-	  /* Constructor in progress
-      public SchedulingAlgorithm(String name, List<PCB> queue, String schedulingMode, int stepsPerSecond) {
-    	  this(name, queue, schedulingMode);
-    	  this.stepsPerSecond = stepsPerSecond;
-      }
-      */
+	  }     
 	
 	public void schedule() {
 		Scanner sc = new Scanner(System.in);

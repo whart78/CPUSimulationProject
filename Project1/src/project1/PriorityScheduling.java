@@ -3,8 +3,10 @@ import java.util.*;
 
 // Priority Scheduling Algorithm
 public class PriorityScheduling extends SchedulingAlgorithm {
-    public PriorityScheduling(List<PCB> queue) {
+    public PriorityScheduling(List<PCB> queue, String schedulingMode, int stepsPerSecond) {
         super("Priority Scheduling", queue);
+        this.schedulingMode = schedulingMode;
+		this.stepsPerSecond = stepsPerSecond;
     }
 
     @Override

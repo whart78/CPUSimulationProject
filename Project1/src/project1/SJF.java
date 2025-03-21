@@ -3,8 +3,10 @@ import java.util.*;
 
 // Shortest Job First (SJF) Scheduling Algorithm
 public class SJF extends SchedulingAlgorithm {
-    public SJF(List<PCB> queue) {
+    public SJF(List<PCB> queue, String schedulingMode, int stepsPerSecond) {
         super("SJF", queue);
+        this.schedulingMode = schedulingMode;
+		this.stepsPerSecond = stepsPerSecond;
     }
 
     @Override

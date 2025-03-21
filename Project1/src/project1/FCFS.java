@@ -3,8 +3,10 @@ package project1;
 import java.util.List;
 
 public class FCFS extends SchedulingAlgorithm {
-      public FCFS(List<PCB> queue) {
+      public FCFS(List<PCB> queue, String schedulingMode, int stepsPerSecond) {
 		super("FCFS", queue);
+		this.schedulingMode = schedulingMode;
+		this.stepsPerSecond = stepsPerSecond;
 	}
 
 
