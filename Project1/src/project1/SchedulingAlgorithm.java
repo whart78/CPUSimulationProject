@@ -1,5 +1,7 @@
 package project1;
+import java.io.File;
 import java.util.*;
+import java.util.Scanner;
 
 public abstract class SchedulingAlgorithm {
       protected String name;		      //scheduling algorithm name
@@ -11,22 +13,39 @@ public abstract class SchedulingAlgorithm {
 	protected PCB curIO;
 	protected int systemTime; //system time or simulation time steps
 	protected int cpuIdleTime;
+	protected String schedulingMode = "Manual"; //system time or simulation time steps
+	protected int stepsPerSecond = 2;
  
-      public SchedulingAlgorithm(String name, List<PCB> queue) {
-    	      this.name = name;
-    	      this.allProcs = queue;
-    	      this.readyQueue = new ArrayList<>();
-    	      this.finishedProcs = new ArrayList<>();
-    	      this.ioWaitingQueue = new ArrayList<>();
-    	      cpuIdleTime = 0;
+	  public SchedulingAlgorithm(String name, List<PCB> queue) {
+		      this.name = name;
+		      this.allProcs = queue;
+		      this.readyQueue = new ArrayList<>();
+		      this.finishedProcs = new ArrayList<>();
+		      this.ioWaitingQueue = new ArrayList<>();
+		      cpuIdleTime = 0;
+	  }
+      
+	  /* Constructor in progress
+      public SchedulingAlgorithm(String name, List<PCB> queue, String schedulingMode, int stepsPerSecond) {
+    	  this(name, queue, schedulingMode);
+    	  this.stepsPerSecond = stepsPerSecond;
       }
+      */
 	
 	public void schedule() {
+		Scanner sc = new Scanner(System.in);
+		float interval = ((float) 1) / stepsPerSecond;
+		
 		//  add code to complete the method		
 		System.out.println("Scheduling algorithm: " + name);
 		//- Print the name of the scheduling algorithm
 		//- while (allProcs is not empty or readyQueue is not empty) {
+		
 		while(!allProcs.isEmpty() || !readyQueue.isEmpty() || curIO != null) {
+			
+			long startTime = System.currentTimeMillis();
+			long targetTime = startTime + (long) (1000 * interval);
+		
 			//Print the current system time
 			System.out.println("\n\nSystem time: " + systemTime);
 			
@@ -107,6 +126,15 @@ public abstract class SchedulingAlgorithm {
 				curProcess = null;
 				systemTime += 1;
 				cpuIdleTime +=1;
+			}
+			
+			//iteration method dependent on mode
+			if(schedulingMode.equals("Manual")) {
+				System.out.println("Press enter to continue: ");
+				sc.nextLine();
+			}
+			else if (schedulingMode.equals("Automation")) {
+				while(System.currentTimeMillis() < targetTime) {/*wait*/}
 			}
 		}
 		//Last print for program
