@@ -6,7 +6,7 @@ public class RR extends SchedulingAlgorithm {
     private int currentIndex;
 
     public RR(List<PCB> queue, int timeQuantum) {
-        super("Round Robin", queue);
+        super("RR", queue);
         this.timeQuantum = timeQuantum;
         this.currentIndex = 0;
     }
