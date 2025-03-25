@@ -4,7 +4,7 @@ import java.util.*;
 // Priority Scheduling Algorithm
 public class PS extends SchedulingAlgorithm {
     public PS(List<PCB> queue) {
-        super("Priority Scheduling", queue);
+        super("PS", queue);
     }
 
     @Override
