@@ -40,7 +40,7 @@ public class Driver {
 					}
 				}
 				
-				int priority = Integer.parseInt(arr[3].trim());
+				int priority = Integer.parseInt(arr[2].trim());
 				PCB proc = new PCB(name, id++, arrivalTime, cpuBursts, ioBursts, priority);
 				allProcs.add(proc);
 			}
@@ -50,7 +50,7 @@ public class Driver {
 		SchedulingAlgorithm scheduler = null;
 		switch(alg) {
 		case "FCFS":
-			scheduler = new FCFS(allProcs);
+			scheduler = new FCFS(allProcs, "Automation", 10);
 			break;
 		}
 		scheduler.schedule();

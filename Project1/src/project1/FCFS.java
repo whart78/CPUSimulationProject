@@ -12,6 +12,10 @@ public class FCFS extends SchedulingAlgorithm {
 
       public PCB pickNextProcess() {
 		// TODO Auto-generated method stub
+    	  
+    	  return readyQueue.getFirst();
+    	  
+    	  /* FIRST IMPLEMENTATION; WRONG
     	  PCB earliestArrivalTime = readyQueue.get(0);
     	  
     	  if(readyQueue.size() > 1) {
@@ -22,5 +26,6 @@ public class FCFS extends SchedulingAlgorithm {
 	    	  }
     	  }
     	  return earliestArrivalTime;
+    	  */
       }
 }

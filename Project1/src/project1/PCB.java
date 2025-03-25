@@ -130,7 +130,7 @@ public class PCB {
 	public void setFinishTime(int finishTime) {
 		this.finishTime = finishTime;
 		this.turnaroundTime = finishTime - arrivalTime;
-		status = "Completed";
+		status = "Finished";
 	}
 
 	public int getTurnaroundTime() {
@@ -170,7 +170,7 @@ public class PCB {
 	public String toString() {
 		return "[ID: " + id 
 			    + " | Arrival Time: " + arrivalTime + " | Priority: " + priority + " | CPU Bursts: " + ((cpuBursts.isEmpty()) ? "none" : cpuBursts) +
-			      " | IO Bursts: " + ((ioBursts.isEmpty()) ? "none" : ioBursts) + " | Finish Time: " + finishTime + 
+			      " | IO Bursts: " + ((ioBursts.isEmpty()) ? "none" : ioBursts) + " | Start Time: " + startTime + " | Finish Time: " + finishTime + 
 			      " | Wait Time: " + waitingTime + " | Wait IO Time: " + ioWaitingTime + " | Status: " + status +  "]";
 	}
 

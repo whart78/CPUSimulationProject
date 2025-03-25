@@ -12,9 +12,10 @@ public abstract class SchedulingAlgorithm {
 	protected PCB curProcess; //current selected process by the scheduler
 	protected PCB curIO;
 	protected int systemTime; //system time or simulation time steps
-	protected int cpuIdleTime;
+	protected int cpuIdleTime; //track CPU idle time to calculate utilization
 	protected String schedulingMode; //system time or simulation time steps
-	protected int stepsPerSecond;
+	protected int stepsPerSecond; //steps per second for automation
+	protected int unitsCompleted;
  
 	  public SchedulingAlgorithm(String name, List<PCB> queue) {
 		      this.name = name;
@@ -23,11 +24,19 @@ public abstract class SchedulingAlgorithm {
 		      this.finishedProcs = new ArrayList<>();
 		      this.ioWaitingQueue = new ArrayList<>();
 		      cpuIdleTime = 0;
+		      unitsCompleted = 0;
 	  }     
 	
 	public void schedule() {
+		
 		Scanner sc = new Scanner(System.in);
-		float interval = ((float) 1) / stepsPerSecond;
+		float interval = 0;
+		long targetTime = 0;
+
+		//if mode is automation, set a time interval.
+		if(schedulingMode.equals("Automation")) {
+			interval = ((float) 1) / stepsPerSecond;
+		}
 		
 		//  add code to complete the method		
 		System.out.println("Scheduling algorithm: " + name);
@@ -36,17 +45,20 @@ public abstract class SchedulingAlgorithm {
 		
 		while(!allProcs.isEmpty() || !readyQueue.isEmpty() || curIO != null) {
 			
-			long startTime = System.currentTimeMillis();
-			long targetTime = startTime + (long) (1000 * interval);
+			if(schedulingMode.equals("Automation")) {
+				long startTime = System.currentTimeMillis();
+				targetTime = startTime + (long) (1000 * interval);
+			}
 		
 			//Print the current system time
 			System.out.println("\n\nSystem time: " + systemTime);
 			
 			//Move arrived processes from allProcs to readyQueue (arrivalTime = systemTime)
 			for(PCB proc : allProcs) {
-				if(proc.getArrivalTime() == systemTime)
+				if(proc.getArrivalTime() == systemTime) {
 					readyQueue.add(proc);
 					proc.setStatus("Arrived");
+				}
 			}
 			
 			//remove ready processes from arrived processes
@@ -57,12 +69,23 @@ public abstract class SchedulingAlgorithm {
 			//if there are processes in the ready queue, continue to processing
 			if(!readyQueue.isEmpty()) {
 				
-				//select a process
-				curProcess = pickNextProcess();
-				curProcess.setStatus("Started");
+				if(curProcess == null) {
+					//select a process
+					curProcess = pickNextProcess();
+					
+					//set start time if first time executing; start time would be 0.
+					if(curProcess.getStartTime() == 0) {
+						curProcess.setStartTime(systemTime);
+					}
+				}
 				
 				//remove the selected process from the ready queue.
-				readyQueue.remove(curProcess);
+				//readyQueue.remove(curProcess);
+				
+				//print system metrics
+				//System.out.printf("CPU Utilization: %.2f %%\n", ((double) (systemTime - cpuIdleTime) / systemTime) * 100);
+				//System.out.printf("Throughout: %.2f\n", (double) unitsCompleted / systemTime);
+				//System.out.printf("Average Wait: %.2f\n", getAverageWaitTime());
 				
 				//call print() to print simulation state at the beginning of this simulation step.
 				print();
@@ -75,13 +98,15 @@ public abstract class SchedulingAlgorithm {
 					
 						//Call CPU.execute() to let the CPU execute 1 CPU unit time of curProcess
 						CPU.execute(curProcess, 1);
+						unitsCompleted += 1;
+						curProcess.setStatus("Started");
 						
 						//Increase 1 to the waiting time of other processes in the ready queue
 						for(PCB proc: readyQueue) 
 							if(proc != curProcess) proc.increaseWaitingTime(1);
 						
 						//add the current process back to ready queue to be assessed.
-						readyQueue.add(curProcess);
+						//readyQueue.add(curProcess);
 						
 						//Check if the remaining CPU burst of curProcess = 0
 						if(curProcess.getCpuBursts().get(0) == 0) {
@@ -103,20 +128,16 @@ public abstract class SchedulingAlgorithm {
 								ioWaitingQueue.add(curProcess);
 								readyQueue.remove(curProcess);
 							}
+							curProcess = null;
 						}
-						//handle IO 
-						//IOHandler();
 				}
-		
 				IOHandler();
-				curProcess = null;
 				systemTime += 1;
 			}
 			//else there are no processes in the ready queue, thus a process cannot be selected for CPU execution. Handle IO. Print system state and iterate system time.
 			else {
 				print();
 				IOHandler();
-				curProcess = null;
 				systemTime += 1;
 				cpuIdleTime +=1;
 			}
@@ -130,10 +151,10 @@ public abstract class SchedulingAlgorithm {
 				while(System.currentTimeMillis() < targetTime) {/*wait*/}
 			}
 		}
-		//Last print for program
-		System.out.println("\nFinal State");
-		System.out.printf("CPU Utilization: %.2f %%\n", ((double) (systemTime - cpuIdleTime) / systemTime) * 100);
+		//Print out last iteration for program
+		System.out.println("\n\nSystem time: " + systemTime);
 		print();
+		
 	}
 	
 	  //Selects the next task using the appropriate scheduling algorithm
@@ -168,11 +189,63 @@ public abstract class SchedulingAlgorithm {
 				}
 			}
       }
+      
+      public double getAverageWaitTime() {
+    	  
+		  //metric variables
+		  int totalProcesses = 0;
+		  int totalWaitTime = 0;
+		  
+		  totalProcesses = finishedProcs.size() + readyQueue.size() + ioWaitingQueue.size();
+		  
+		  // if no processes, return 0.
+		  if(totalProcesses == 0) {
+			  return 0;
+		  }
+    	  
+    	  //get total wait time
+		  for(PCB proc : finishedProcs) {
+				totalWaitTime += proc.getWaitingTime();
+		  }
+		  
+		  for(PCB proc : readyQueue) {
+			  	totalWaitTime += proc.getWaitingTime();
+		  }
+		  
+		  for(PCB proc : ioWaitingQueue) {
+			  	totalWaitTime += proc.getWaitingTime();
+		  }
+		  
+		  return (double) totalWaitTime / totalProcesses;
+    	
+      }
+      
+      public double getAverageTurnaroundTime() {
+    	  int sumCompletionTime = 0;
+    	  int sumArrivalTime = 0;
+    	  
+    	  if(finishedProcs.size() == 0) {
+    		  return 0;
+    	  }
+    	  
+    	  for(PCB proc : finishedProcs) {
+    		  sumCompletionTime += proc.getFinishTime();
+    		  sumArrivalTime += proc.getArrivalTime();
+    	  }
+    	  
+    	  return (double) (sumCompletionTime - sumArrivalTime) / finishedProcs.size();
+      }
 
       //print simulation step
       public void print() {
 		System.out.println("CPU: " + ((curProcess == null) ? "idle" : curProcess.getName()));
 		System.out.println("IO: " + ((curIO == null) ? "idle" : curIO.getName()));
+		
+		//print system metrics
+		System.out.printf("CPU Utilization: %.2f %%\n", ((systemTime != 0) ? ((double) (systemTime - cpuIdleTime) / systemTime) * 100 : 0));
+		System.out.printf("Throughout: %.2f\n", ((systemTime != 0) ? (double) finishedProcs.size() / systemTime : 0));
+		System.out.printf("Average Turnaround: %.2f\n", getAverageTurnaroundTime());
+		System.out.printf("Average Wait: %.2f\n", getAverageWaitTime());
 		
 		if(curProcess != null) {
 			System.out.println("Current Process: \n  CPU " + curProcess);
@@ -181,11 +254,12 @@ public abstract class SchedulingAlgorithm {
 			System.out.println("  IO " + curIO);
 		}
 		
-		if (!readyQueue.isEmpty()) {
+		if (readyQueue.size() > 1) {
 			System.out.println("Ready Processes: ");
 			for(PCB proc : readyQueue) {
-				
-				System.out.println("  " + proc);
+				if(proc != curProcess) {
+					System.out.println("  " + proc);
+				}
 			}
 		}
 		
