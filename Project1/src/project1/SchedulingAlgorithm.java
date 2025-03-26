@@ -1,5 +1,7 @@
 package project1;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 import java.util.Scanner;
 
@@ -8,14 +10,15 @@ public abstract class SchedulingAlgorithm {
 	protected List<PCB> allProcs;		//the initial list of processes
 	protected List<PCB> readyQueue;	//ready queue of ready processes
 	protected List<PCB> finishedProcs;	//list of terminated processes
-	protected List<PCB> ioWaitingQueue;
+	protected List<PCB> ioWaitingQueue; //list of processes waiting for IO
+	protected List<String[]> logMessages; //list of log messages to store and print 
+	protected List<String[]> performanceLogs;
 	protected PCB curProcess; //current selected process by the scheduler
-	protected PCB curIO;
+	protected PCB curIO; //current selected process for IO
 	protected int systemTime; //system time or simulation time steps
 	protected int cpuIdleTime; //track CPU idle time to calculate utilization
 	protected String schedulingMode; //system time or simulation time steps
 	protected int stepsPerSecond; //steps per second for automation
-	protected int unitsCompleted;
  
 	  public SchedulingAlgorithm(String name, List<PCB> queue) {
 		      this.name = name;
@@ -23,18 +26,19 @@ public abstract class SchedulingAlgorithm {
 		      this.readyQueue = new ArrayList<>();
 		      this.finishedProcs = new ArrayList<>();
 		      this.ioWaitingQueue = new ArrayList<>();
+		      this.logMessages = new ArrayList<>();
+		      this.performanceLogs = new ArrayList<>();
 		      cpuIdleTime = 0;
-		      unitsCompleted = 0;
 	  }     
 	
-	public void schedule() {
+	public void schedule() throws IOException {
 		
 		Scanner sc = new Scanner(System.in);
 		float interval = 0;
 		long targetTime = 0;
 
 		//if mode is automation, set a time interval.
-		if(schedulingMode.equals("Automation")) {
+		if(schedulingMode.equals("automation")) {
 			interval = ((float) 1) / stepsPerSecond;
 		}
 		
@@ -45,7 +49,7 @@ public abstract class SchedulingAlgorithm {
 		
 		while(!allProcs.isEmpty() || !readyQueue.isEmpty() || curIO != null) {
 			
-			if(schedulingMode.equals("Automation")) {
+			if(schedulingMode.equals("automation")) {
 				long startTime = System.currentTimeMillis();
 				targetTime = startTime + (long) (1000 * interval);
 			}
@@ -58,6 +62,7 @@ public abstract class SchedulingAlgorithm {
 				if(proc.getArrivalTime() == systemTime) {
 					readyQueue.add(proc);
 					proc.setStatus("Arrived");
+					addLogMessage(systemTime, "Process " + proc.getId() + " is created at " + systemTime);
 				}
 			}
 			
@@ -69,7 +74,7 @@ public abstract class SchedulingAlgorithm {
 			//if there are processes in the ready queue, continue to processing
 			if(!readyQueue.isEmpty()) {
 				
-				if(curProcess == null) {
+				//if(curProcess == null) {
 					//select a process
 					curProcess = pickNextProcess();
 					
@@ -77,15 +82,7 @@ public abstract class SchedulingAlgorithm {
 					if(curProcess.getStartTime() == 0) {
 						curProcess.setStartTime(systemTime);
 					}
-				}
-				
-				//remove the selected process from the ready queue.
-				//readyQueue.remove(curProcess);
-				
-				//print system metrics
-				//System.out.printf("CPU Utilization: %.2f %%\n", ((double) (systemTime - cpuIdleTime) / systemTime) * 100);
-				//System.out.printf("Throughout: %.2f\n", (double) unitsCompleted / systemTime);
-				//System.out.printf("Average Wait: %.2f\n", getAverageWaitTime());
+				//}
 				
 				//call print() to print simulation state at the beginning of this simulation step.
 				print();
@@ -98,15 +95,11 @@ public abstract class SchedulingAlgorithm {
 					
 						//Call CPU.execute() to let the CPU execute 1 CPU unit time of curProcess
 						CPU.execute(curProcess, 1);
-						unitsCompleted += 1;
 						curProcess.setStatus("Started");
 						
 						//Increase 1 to the waiting time of other processes in the ready queue
 						for(PCB proc: readyQueue) 
 							if(proc != curProcess) proc.increaseWaitingTime(1);
-						
-						//add the current process back to ready queue to be assessed.
-						//readyQueue.add(curProcess);
 						
 						//Check if the remaining CPU burst of curProcess = 0
 						if(curProcess.getCpuBursts().get(0) == 0) {
@@ -122,11 +115,15 @@ public abstract class SchedulingAlgorithm {
 								//System.out.println("Process " + curProcess.getId() + " terminated at " + systemTime
 								//		+ ". Turnaround time: " +curProcess.getTurnaroundTime()
 								//		+ ". Waiting time: " + curProcess.getWaitingTime());
+								
+								//terminates at systemTime + 1 because this will be printed on the next/correct iteration.
+								addLogMessage(systemTime + 1, "Process " + curProcess.getId() + " terminated at " + (systemTime + 1));
 							}
 							//if process has ioBurst, add to io waiting queue.
 							else if(!curProcess.getIOBursts().isEmpty()) {
 								ioWaitingQueue.add(curProcess);
 								readyQueue.remove(curProcess);
+								addLogMessage(systemTime + 1, "Process " + curProcess.getId() + ": CPU to IO queue at " + (systemTime + 1));
 							}
 							curProcess = null;
 						}
@@ -140,21 +137,41 @@ public abstract class SchedulingAlgorithm {
 				IOHandler();
 				systemTime += 1;
 				cpuIdleTime +=1;
-			}
+			}	
 			
 			//iteration method dependent on mode
-			if(schedulingMode.equals("Manual")) {
+			if(schedulingMode.equals("manual")) {
 				System.out.println("Press enter to continue: ");
 				sc.nextLine();
 			}
-			else if (schedulingMode.equals("Automation")) {
+			else if (schedulingMode.equals("automation")) {
 				while(System.currentTimeMillis() < targetTime) {/*wait*/}
 			}
 		}
+				
 		//Print out last iteration for program
 		System.out.println("\n\nSystem time: " + systemTime);
 		print();
 		
+		FileWriter writer1 = new FileWriter("summary.txt");
+		System.out.println("Would you like to save your execution logs and system performance to a text file? (Y/N): ");
+		char userInput = sc.next().charAt(0);
+		
+		if(userInput == 'Y') {	
+			writer1.write("\n\nExecution Logs: " + name + "\n");
+			for(String[] message : logMessages) {
+				writer1.write(message[1] + "\n");
+			}
+		}
+		
+		FileWriter writer2 = new FileWriter("performance.csv");
+		
+		for(String[] log : performanceLogs) {
+			//writer.write("\"" +log[0] + "\", \"" + log[1] + "\", \"" + log[2] + "\", \"" + log[3] + "\", \"" + log[4] + "\"\n");
+			writer2.write(log[0] + "," + log[1] + "," + log[2] + "," + log[3] + "," + log[4] + "\n");
+		}
+		writer1.close();
+		writer2.close();
 	}
 	
 	  //Selects the next task using the appropriate scheduling algorithm
@@ -181,6 +198,7 @@ public abstract class SchedulingAlgorithm {
 				curIO.getIOBursts().removeFirst();
 				ioWaitingQueue.removeFirst();
 				readyQueue.add(curIO);
+				addLogMessage(systemTime + 1, "Process " + curIO.getId() + ": IO to ready queue at " + (systemTime + 1));
 				if(!ioWaitingQueue.isEmpty()) {
 					curIO = ioWaitingQueue.getFirst();
 				}
@@ -235,17 +253,45 @@ public abstract class SchedulingAlgorithm {
     	  
     	  return (double) (sumCompletionTime - sumArrivalTime) / finishedProcs.size();
       }
+      
+      public void addLogMessage(int systemTime, String message) {
+    	  String[] logMessage = {Integer.toString(systemTime), message};
+    	  logMessages.add(logMessage);
+      }
+      
+      public void addPerformanceLog(int systemTime, double cpuUtilization, double throughput, double turnaround, double waitingTime) {
+    	  String[] performanceLog = {Integer.toString(systemTime).trim(), Double.toString(cpuUtilization).trim(), Double.toString(throughput).trim(), Double.toString(turnaround).trim(), Double.toString(waitingTime).trim()};
+    	  performanceLogs.add(performanceLog);
+      }
 
       //print simulation step
       public void print() {
 		System.out.println("CPU: " + ((curProcess == null) ? "idle" : curProcess.getName()));
 		System.out.println("IO: " + ((curIO == null) ? "idle" : curIO.getName()));
 		
-		//print system metrics
-		System.out.printf("CPU Utilization: %.2f %%\n", ((systemTime != 0) ? ((double) (systemTime - cpuIdleTime) / systemTime) * 100 : 0));
-		System.out.printf("Throughout: %.2f\n", ((systemTime != 0) ? (double) finishedProcs.size() / systemTime : 0));
-		System.out.printf("Average Turnaround: %.2f\n", getAverageTurnaroundTime());
-		System.out.printf("Average Wait: %.2f\n", getAverageWaitTime());
+		//get performance metrics
+		double cpuUtilization = 0;
+		double throughput = 0;
+		
+		if(systemTime != 0) {
+			cpuUtilization = (double) (systemTime - cpuIdleTime) / systemTime * 100;
+			throughput = (double) finishedProcs.size() / systemTime;
+		}
+		else {
+			cpuUtilization = 0;
+			throughput = 0;
+		}
+		double turnaround = getAverageTurnaroundTime();
+		double waitingTime = getAverageWaitTime();
+		
+		//print performance metrics
+		System.out.printf("CPU Utilization: %.2f %%\n", cpuUtilization);
+		System.out.printf("Throughput: %.2f\n", throughput);
+		System.out.printf("Average Turnaround: %.2f\n", turnaround);
+		System.out.printf("Average Wait: %.2f\n", waitingTime);
+	
+		//add performance log
+		addPerformanceLog(systemTime, cpuUtilization, throughput, turnaround, waitingTime);
 		
 		if(curProcess != null) {
 			System.out.println("Current Process: \n  CPU " + curProcess);
@@ -275,6 +321,15 @@ public abstract class SchedulingAlgorithm {
 			System.out.println("Finished Processes: ");
 			for(PCB proc : finishedProcs) {
 				System.out.println("  " + proc);
+			}
+		}
+		
+		//print log messages
+		if(!logMessages.isEmpty()) {
+			for(String[] message : logMessages) {
+				if(Integer.parseInt(message[0]) == systemTime) {
+					System.out.println(message[1]);
+				}
 			}
 		}
     }

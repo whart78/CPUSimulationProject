@@ -9,11 +9,11 @@ import java.util.Scanner;
 
 public class Driver {
 
-	public static void main(String[] args) throws FileNotFoundException {
+	public static void main(String[] args) throws IOException {
 		Scanner scanner = new Scanner(System.in);
 		
 		//Ask for user to input file name
-		System.out.println("Please enter the file name.");
+		System.out.print("Please enter the file name: ");
 		String fileName = scanner.nextLine();
 		//read the set of input processes
 		Scanner sc = new Scanner(new File(fileName));
@@ -45,7 +45,7 @@ public class Driver {
 					}
 				}
 				
-				int priority = Integer.parseInt(arr[3].trim());
+				int priority = Integer.parseInt(arr[2].trim());
 				PCB proc = new PCB(name, id++, arrivalTime, cpuBursts, ioBursts, priority);
 				allProcs.add(proc);
 			}
@@ -53,15 +53,15 @@ public class Driver {
 		
 		String schedulingMode = "";
 		while (!schedulingMode.equals("automation") && !schedulingMode.equals("manual")) {
-			System.out.println("Choose scheduling mode (Automation or Manual");
+			System.out.print("Choose scheduling mode (Automation or Manual): ");
 			schedulingMode = scanner.nextLine().toLowerCase();
-			if (!schedulingMode.equals("autmation") && !schedulingMode.equals("manual")) {
+			if (!schedulingMode.equals("automation") && !schedulingMode.equals("manual")) {
 				System.out.println("Invalid input, please enter 'automation' or 'manual'");
 			}
 		}
 		
 		int stepsPerSecond = -1;
-		System.out.println("Choose number of simulation steps per second (must be >= 1).");
+		System.out.print("Choose number of simulation steps per second (must be >= 1): ");
 		try {
 			stepsPerSecond = Integer.parseInt(scanner.nextLine());
 			if (stepsPerSecond <= 0) {
@@ -73,7 +73,7 @@ public class Driver {
 		}
 		
 		String alg = "";
-		System.out.println("Choose one of the following scheduling algorithms: 'FCFS', 'SJF', 'RR', 'PF'.");
+		System.out.print("Choose one of the following scheduling algorithms: 'FCFS', 'SJF', 'RR', 'PF': ");
 		alg = scanner.nextLine();
 		//ready to simulate the scheduling of those processes
 		SchedulingAlgorithm scheduler = null;
@@ -89,13 +89,14 @@ public class Driver {
 			if (timeQuantum <= 0) {
 				System.out.println("Enter a quantum time for RR.");
 				try {
-				timeQuantum = Integer.parseInt(scanner.nextLine());
-				if (timeQuantum <= 0) {
-					System.out.println("Invalid input, please enter an integer above 0.");
+					timeQuantum = Integer.parseInt(scanner.nextLine());
+					if (timeQuantum <= 0) {
+						System.out.println("Invalid input, please enter an integer above 0.");
+					}
+				} 
+				catch (NumberFormatException e) {
+					System.out.println("Invalid input, please enter a valid integer.");
 				}
-				
-			} catch (NumberFormatException e) {
-				System.out.println("Invalid input, please enter a valid integer.");
 			}
 			scheduler = new RR(allProcs, schedulingMode, stepsPerSecond, timeQuantum);
 			break;
@@ -105,9 +106,10 @@ public class Driver {
 		default:
 			System.out.println("Please enter one of the following 'FCFS', 'SJF', 'RR', 'PF'.");
 			break;
-			}
-		scheduler.schedule();
 		}
+		
+		//test
+		scheduler.schedule();
 		sc.close();
 		scanner.close();
 	}

@@ -9,10 +9,9 @@ public class FCFS extends SchedulingAlgorithm {
 		this.stepsPerSecond = stepsPerSecond;
 	}
 
-
+      @Override
       public PCB pickNextProcess() {
 		// TODO Auto-generated method stub
-    	  
     	  return readyQueue.getFirst();
     	  
     	  /* FIRST IMPLEMENTATION; WRONG
