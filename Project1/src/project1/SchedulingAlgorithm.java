@@ -4,9 +4,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public abstract class SchedulingAlgorithm {
-      protected String name;		      //scheduling algorithm name
+    protected String name;		      //scheduling algorithm name
 	protected List<PCB> allProcs;		//the initial list of processes
 	protected List<PCB> readyQueue;	//ready queue of ready processes
 	protected List<PCB> finishedProcs;	//list of terminated processes
@@ -20,16 +22,16 @@ public abstract class SchedulingAlgorithm {
 	protected String schedulingMode; //system time or simulation time steps
 	protected int stepsPerSecond; //steps per second for automation
  
-	  public SchedulingAlgorithm(String name, List<PCB> queue) {
-		      this.name = name;
-		      this.allProcs = queue;
-		      this.readyQueue = new ArrayList<>();
-		      this.finishedProcs = new ArrayList<>();
-		      this.ioWaitingQueue = new ArrayList<>();
-		      this.logMessages = new ArrayList<>();
-		      this.performanceLogs = new ArrayList<>();
-		      cpuIdleTime = 0;
-	  }     
+	public SchedulingAlgorithm(String name, List<PCB> queue) {
+		this.name = name;
+		this.allProcs = queue;
+		this.readyQueue = new ArrayList<>();
+		this.finishedProcs = new ArrayList<>();
+		this.ioWaitingQueue = new ArrayList<>();
+		this.logMessages = new ArrayList<>();
+		this.performanceLogs = new ArrayList<>();
+		cpuIdleTime = 0;
+	}     
 	
 	public void schedule() throws IOException {
 		
@@ -111,11 +113,6 @@ public abstract class SchedulingAlgorithm {
 								finishedProcs.add(curProcess);
 								//Update finishTime of curProcess 
 								curProcess.setFinishTime(systemTime + 1);
-								//Print to the console a message displaying the process name, terminated time, startTime, turnaroundTime, waitingTime
-								//System.out.println("Process " + curProcess.getId() + " terminated at " + systemTime
-								//		+ ". Turnaround time: " +curProcess.getTurnaroundTime()
-								//		+ ". Waiting time: " + curProcess.getWaitingTime());
-								
 								//terminates at systemTime + 1 because this will be printed on the next/correct iteration.
 								addLogMessage(systemTime + 1, "Process " + curProcess.getId() + " terminated at " + (systemTime + 1));
 							}
@@ -153,25 +150,80 @@ public abstract class SchedulingAlgorithm {
 		System.out.println("\n\nSystem time: " + systemTime);
 		print();
 		
-		FileWriter writer1 = new FileWriter("summary.txt");
-		System.out.println("Would you like to save your execution logs and system performance to a text file? (Y/N): ");
-		char userInput = sc.next().charAt(0);
+		//ask user about savings 
+		boolean inputBoolean = true;
+		String userInput = "";
 		
-		if(userInput == 'Y') {	
-			writer1.write("\n\nExecution Logs: " + name + "\n");
+		do {
+			inputBoolean = true;
+			System.out.print("\nWould you like to save your execution logs and system performance to a text file? (Y/N): ");
+			userInput = sc.nextLine().toLowerCase();
+			if(!userInput.equals("y") && !userInput.equals("n")) {
+				System.out.println("Invalid input. Please try again.");
+				inputBoolean = false;
+			}
+		} while(inputBoolean == false);
+		
+		
+		
+		if(userInput.equals("y")) {	
+			String filename = "";
+			do {
+				System.out.print("Enter file name without extension: ");
+				filename = sc.nextLine();
+				Pattern pattern = Pattern.compile("[#%&{}\\<>*?/$!\'\":@+`|=]", Pattern.CASE_INSENSITIVE);
+				Matcher matcher = pattern.matcher(filename);
+				inputBoolean = matcher.find();
+				if(inputBoolean == true) {
+					System.out.println("Detected a possible illegal character for filename. Try something simple with [a-z] and [0-9].");
+				}
+		
+			} while(inputBoolean == true);
+			
+			FileWriter writer1 = new FileWriter("files_output/" + filename + ".txt");
+			writer1.write("Execution Logs and Performance\n\n");
+			writer1.write("Scheduling Algorithm: " + name + "\n"); 
+			writer1.write(String.format("CPU Utilization: %.2f %%\n", getUtilization())); 
+			writer1.write(String.format("Throughput: %.2f\n", getThroughput())); 
+			writer1.write(String.format("Average Turnaround: %.2f\n", getAverageTurnaroundTime())); 
+			writer1.write(String.format("Average Wait: %.2f\n\n", getAverageWaitTime())); 
+			
 			for(String[] message : logMessages) {
 				writer1.write(message[1] + "\n");
 			}
+			
+			writer1.close();
 		}
 		
-		FileWriter writer2 = new FileWriter("performance.csv");
+		do {
+			inputBoolean = true;
+			System.out.print("Would you like to save your raw performance data to a csv file? (Y/N): ");
+			userInput = sc.nextLine().toLowerCase();
+			if(!userInput.equals("y") && !userInput.equals("n")) {
+				System.out.println("Invalid input. Please try again.");
+				inputBoolean = false;
+			}
+		} while(inputBoolean == false);
 		
-		for(String[] log : performanceLogs) {
-			//writer.write("\"" +log[0] + "\", \"" + log[1] + "\", \"" + log[2] + "\", \"" + log[3] + "\", \"" + log[4] + "\"\n");
-			writer2.write(log[0] + "," + log[1] + "," + log[2] + "," + log[3] + "," + log[4] + "\n");
+		if(userInput.equals("y")) {	
+			String filename = "";
+			do {
+				System.out.print("Enter file name without extension: ");
+				filename = sc.nextLine();
+				Pattern pattern = Pattern.compile("[#%&{}\\<>*?/$!\'\":@+`|=]", Pattern.CASE_INSENSITIVE);
+				Matcher matcher = pattern.matcher(filename);
+				inputBoolean = matcher.find();
+				if(inputBoolean == true) {
+					System.out.println("Detected a possible illegal character for filename. Try something simple with [a-z] and [0-9].");
+				}
+			} while(inputBoolean == true);
+			FileWriter writer2 = new FileWriter("files_output/" + filename + ".csv");
+			for(String[] log : performanceLogs) {
+				writer2.write(log[0] + "," + log[1] + "," + log[2] + "," + log[3] + "," + log[4] + "\n");
+			}
+			writer2.close();
 		}
-		writer1.close();
-		writer2.close();
+			
 	}
 	
 	  //Selects the next task using the appropriate scheduling algorithm
@@ -208,6 +260,7 @@ public abstract class SchedulingAlgorithm {
 			}
       }
       
+      //when called, returns the average waiting time for the entire program.
       public double getAverageWaitTime() {
     	  
 		  //metric variables
@@ -235,9 +288,9 @@ public abstract class SchedulingAlgorithm {
 		  }
 		  
 		  return (double) totalWaitTime / totalProcesses;
-    	
       }
       
+    //when called, returns the average turnaround time for the entire program.
       public double getAverageTurnaroundTime() {
     	  int sumCompletionTime = 0;
     	  int sumArrivalTime = 0;
@@ -254,11 +307,26 @@ public abstract class SchedulingAlgorithm {
     	  return (double) (sumCompletionTime - sumArrivalTime) / finishedProcs.size();
       }
       
+      public double getUtilization() {
+    	  if(systemTime == 0) {
+    		  return 0;
+    	  }
+    	  return (double) (systemTime - cpuIdleTime) / systemTime * 100;
+      }
+      
+      public double getThroughput() {
+    	  if(systemTime == 0) {
+    		  return 0;
+    	  }
+    	  return (double) finishedProcs.size() / systemTime;
+      }
+      
       public void addLogMessage(int systemTime, String message) {
     	  String[] logMessage = {Integer.toString(systemTime), message};
     	  logMessages.add(logMessage);
       }
       
+      //performance log is an array with the structure of [system time, utilization, throughput, turnaround, waiting time]
       public void addPerformanceLog(int systemTime, double cpuUtilization, double throughput, double turnaround, double waitingTime) {
     	  String[] performanceLog = {Integer.toString(systemTime).trim(), Double.toString(cpuUtilization).trim(), Double.toString(throughput).trim(), Double.toString(turnaround).trim(), Double.toString(waitingTime).trim()};
     	  performanceLogs.add(performanceLog);
@@ -270,17 +338,8 @@ public abstract class SchedulingAlgorithm {
 		System.out.println("IO: " + ((curIO == null) ? "idle" : curIO.getName()));
 		
 		//get performance metrics
-		double cpuUtilization = 0;
-		double throughput = 0;
-		
-		if(systemTime != 0) {
-			cpuUtilization = (double) (systemTime - cpuIdleTime) / systemTime * 100;
-			throughput = (double) finishedProcs.size() / systemTime;
-		}
-		else {
-			cpuUtilization = 0;
-			throughput = 0;
-		}
+		double cpuUtilization = getUtilization();
+		double throughput = getThroughput();
 		double turnaround = getAverageTurnaroundTime();
 		double waitingTime = getAverageWaitTime();
 		

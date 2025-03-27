@@ -11,12 +11,23 @@ public class Driver {
 
 	public static void main(String[] args) throws IOException {
 		Scanner scanner = new Scanner(System.in);
+		Scanner sc = null;
+		boolean inputBoolean;
 		
-		//Ask for user to input file name
-		System.out.print("Please enter the file name: ");
-		String fileName = scanner.nextLine();
-		//read the set of input processes
-		Scanner sc = new Scanner(new File(fileName));
+		do {
+			try {
+				inputBoolean = true;
+				//Ask for user to input file name
+				System.out.print("Please enter the file name with extension: ");
+				String fileName = scanner.nextLine();
+				//read the set of input processes
+				sc = new Scanner(new File("files_input/" + fileName));
+			} catch(FileNotFoundException e) {
+				System.out.println("File was not found. Try again.");
+				inputBoolean = false;
+			}
+		} while(inputBoolean == false);
+		
 		//String alg = sc.nextLine(); //read the selected algorithm
 		String line;
 		int id = 1;
@@ -90,7 +101,7 @@ public class Driver {
 		case "RR":
 			int timeQuantum = -1;
 			while (timeQuantum <= 0) {
-				System.out.println("Enter a quantum time for RR.");
+				System.out.print("Enter a quantum time for RR: ");
 				try {
 					timeQuantum = Integer.parseInt(scanner.nextLine());
 					if (timeQuantum <= 0) {
