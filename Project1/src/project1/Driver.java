@@ -61,16 +61,19 @@ public class Driver {
 		}
 		
 		int stepsPerSecond = -1;
-		System.out.print("Choose number of simulation steps per second (must be >= 1): ");
-		try {
-			stepsPerSecond = Integer.parseInt(scanner.nextLine());
-			if (stepsPerSecond <= 0) {
-				System.out.println("Number of simulation steps must be greater than 0.");
-			}
+		while (stepsPerSecond <= 0) {
+			System.out.print("Choose number of simulation steps per second (must be >= 1): ");
+			try {
+				stepsPerSecond = Integer.parseInt(scanner.nextLine());
+				if (stepsPerSecond <= 0) {
+					System.out.println("Number of simulation steps must be greater than 0.");
+				}
 			
-		} catch (NumberFormatException e) {
-			System.out.println("Invalid input, please enter a valid integer.");
-		}
+			} catch (NumberFormatException e) {
+				System.out.println("Invalid input, please enter a valid integer.");
+			}
+
+		}	
 		
 		String alg = "";
 		System.out.print("Choose one of the following scheduling algorithms: 'FCFS', 'SJF', 'RR', 'PF': ");
