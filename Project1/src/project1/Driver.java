@@ -89,7 +89,7 @@ public class Driver {
 			break;
 		case "RR":
 			int timeQuantum = -1;
-			if (timeQuantum <= 0) {
+			while (timeQuantum <= 0) {
 				System.out.println("Enter a quantum time for RR.");
 				try {
 					timeQuantum = Integer.parseInt(scanner.nextLine());
