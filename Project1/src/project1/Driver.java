@@ -83,7 +83,6 @@ public class Driver {
 			} catch (NumberFormatException e) {
 				System.out.println("Invalid input, please enter a valid integer.");
 			}
-
 		}	
 		
 		String alg = "";
@@ -121,6 +120,10 @@ public class Driver {
 			System.out.println("Please enter one of the following 'FCFS', 'SJF', 'RR', 'PF'.");
 			break;
 		}
+		
+		//ask the user to start the program
+		System.out.print("Press enter to start the program: ");
+		scanner.nextLine();
 		
 		//test
 		scheduler.schedule();
