@@ -14,10 +14,10 @@ public class Driver {
 			try {
 				inputBoolean = true;
 				// Ask for user to input file name
-				System.out.print("Please enter the file name with extension: ");
+				System.out.print("Please enter the file path with extension: ");
 				fileName = scanner.nextLine();
 				// read the set of input processes
-				sc = new Scanner(new File("files_input/" + fileName));
+				sc = new Scanner(new File(fileName));
 			} catch (FileNotFoundException e) {
 				System.out.println("File was not found. Try again.");
 				inputBoolean = false;
@@ -26,7 +26,7 @@ public class Driver {
 
 		while (true) {
 		
-			sc = new Scanner(new File("files_input/" + fileName));
+			sc = new Scanner(new File(fileName));
 			// String alg = sc.nextLine(); //read the selected algorithm
 			String line;
 			int id = 1;
@@ -61,7 +61,7 @@ public class Driver {
 				}
 			}
 		
-		
+			//ask user for scheduling mode
 			String schedulingMode = "";
 			while (!schedulingMode.equals("automation") && !schedulingMode.equals("manual")) {
 				System.out.print("Choose scheduling mode (Automation or Manual): ");
@@ -71,24 +71,28 @@ public class Driver {
 				}
 			}
 
+			//check whether mode is automation to ask for steps per second
 			int stepsPerSecond = -1;
-			while (stepsPerSecond <= 0) {
-				System.out.print("Choose number of simulation steps per second (must be >= 1): ");
-				try {
-					stepsPerSecond = Integer.parseInt(scanner.nextLine());
-					if (stepsPerSecond <= 0) {
-						System.out.println("Number of simulation steps must be greater than 0.");
+			if(schedulingMode.equals("automation")) {
+				while (stepsPerSecond <= 0) {
+					System.out.print("Choose number of simulation steps per second (must be >= 1): ");
+					try {
+						stepsPerSecond = Integer.parseInt(scanner.nextLine());
+						if (stepsPerSecond <= 0) {
+							System.out.println("Number of simulation steps must be greater than 0.");
+						}
+	
+					} catch (NumberFormatException e) {
+						System.out.println("Invalid input, please enter a valid integer.");
 					}
-
-				} catch (NumberFormatException e) {
-					System.out.println("Invalid input, please enter a valid integer.");
+	
 				}
-
 			}
 
 			String alg = "";
 			System.out.print("Choose one of the following scheduling algorithms: 'FCFS', 'SJF', 'RR', 'PF': ");
 			alg = scanner.nextLine().toUpperCase();
+			
 			// ready to simulate the scheduling of those processes
 			SchedulingAlgorithm scheduler = null;
 			
@@ -121,6 +125,9 @@ public class Driver {
 					System.out.println("Please enter one of the following 'FCFS', 'SJF', 'RR', 'PF'.");
 					break;
 			}
+			
+			System.out.print("Press enter to start the program: ");
+			scanner.nextLine();
 
 			// test
 			scheduler.schedule();
@@ -135,6 +142,7 @@ public class Driver {
 				}
 			} while (inputBoolean == false);
 			if (userInput.equals("y")) {
+				System.out.println();
 			} else {
 				break;
 			}
@@ -142,6 +150,7 @@ public class Driver {
 		}
 		sc.close();
 		scanner.close();
+		System.out.print("Program has terminated.");
 	}
 
 }

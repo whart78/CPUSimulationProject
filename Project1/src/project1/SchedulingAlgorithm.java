@@ -180,7 +180,7 @@ public abstract class SchedulingAlgorithm {
 		
 			} while(inputBoolean == true);
 			
-			FileWriter writer1 = new FileWriter("files_output/" + filename + ".txt");
+			FileWriter writer1 = new FileWriter(filename + ".txt");
 			writer1.write("Execution Logs and Performance\n\n");
 			writer1.write("Scheduling Algorithm: " + name + "\n"); 
 			writer1.write(String.format("CPU Utilization: %.2f %%\n", getUtilization())); 
@@ -217,7 +217,7 @@ public abstract class SchedulingAlgorithm {
 					System.out.println("Detected a possible illegal character for filename. Try something simple with [a-z] and [0-9].");
 				}
 			} while(inputBoolean == true);
-			FileWriter writer2 = new FileWriter("files_output/" + filename + ".csv");
+			FileWriter writer2 = new FileWriter(filename + ".csv");
 			for(String[] log : performanceLogs) {
 				writer2.write(log[0] + "," + log[1] + "," + log[2] + "," + log[3] + "," + log[4] + "\n");
 			}
